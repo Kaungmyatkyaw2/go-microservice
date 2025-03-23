@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	protos "github.com/Kaungmyatkyaw2/currency/protos/currency"
-	"github.com/Kaungmyatkyaw2/currency/server"
+	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
+	"github.com/Kaungmyatkyaw2/go-microservice/currency/server"
 )
 
 func main() {

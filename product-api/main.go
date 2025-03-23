@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Kaungmyatkyaw2/product-api/data"
-	"github.com/Kaungmyatkyaw2/product-api/handlers"
+	"github.com/Kaungmyatkyaw2/go-microservice/product-api/data"
+	"github.com/Kaungmyatkyaw2/go-microservice/product-api/handlers"
 
 	"github.com/go-openapi/runtime/middleware"
 	gohandlers "github.com/gorilla/handlers"

@@ -1,4 +1,4 @@
-module github.com/Kaungmyatkyaw2/product-api
+module github.com/Kaungmyatkyaw2/go-microservice/product-api
 
 go 1.23.6
 

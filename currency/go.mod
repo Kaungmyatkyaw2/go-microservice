@@ -1,4 +1,4 @@
-module github.com/Kaungmyatkyaw2/currency
+module github.com/Kaungmyatkyaw2/go-microservice/currency
 
 go 1.23.6
 
