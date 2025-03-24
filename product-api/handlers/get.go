@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
+	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
 	"github.com/Kaungmyatkyaw2/go-microservice/product-api/data"
 )
 
@@ -44,6 +46,20 @@ func (p *Products) GetByID(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	rr := &protos.RateRequest{
+		Base:        protos.Currencies_EUR,
+		Destination: protos.Currencies_GBP,
+	}
+	resp, err := p.cc.GetRate(context.Background(), rr)
+
+	if err != nil {
+		p.l.Println("[Error] error getting new rate", err)
+		data.ToJSON(&GenericError{Message: err.Error()}, w)
+		return
+	}
+
+	prod.Price = prod.Price * resp.Rate
 
 	data.ToJSON(prod, w)
 

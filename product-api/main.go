@@ -15,6 +15,8 @@ import (
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
+
+	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
 )
 
 func main() {
@@ -22,19 +24,20 @@ func main() {
 	l := log.New(os.Stdout, "product-api: ", log.LstdFlags)
 	v := data.NewValidation()
 
-	conn, err := grpc.Dial("localhost:9092")
+	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
 	defer conn.Close()
 
-	// cc := protos.NewCurrenctyClient(conn)
+	cc := protos.NewCurrencyClient(conn)
 
-	ph := handlers.NewProducts(l, v)
+	ph := handlers.NewProducts(l, v, cc)
 
 	sm := mux.NewRouter()
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
 	getRouter.HandleFunc("/products", ph.ListAll)
+	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.GetByID)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
 	putRouter.HandleFunc("/products", ph.UpdateProduct)
@@ -43,6 +46,9 @@ func main() {
 	addRouter := sm.Methods(http.MethodPost).Subrouter()
 	addRouter.HandleFunc("/products", ph.Create)
 	addRouter.Use(ph.MiddlewareProductValidation)
+
+	deleteR := sm.Methods(http.MethodDelete).Subrouter()
+	deleteR.HandleFunc("/products/{id:[0-9]+}", ph.Delete)
 
 	opts := middleware.RedocOpts{SpecURL: "./swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)

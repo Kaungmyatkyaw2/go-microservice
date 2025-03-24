@@ -6,18 +6,20 @@ import (
 	"net/http"
 	"strconv"
 
+	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
 	"github.com/Kaungmyatkyaw2/go-microservice/product-api/data"
 
 	"github.com/gorilla/mux"
 )
 
 type Products struct {
-	l *log.Logger
-	v *data.Validation
+	l  *log.Logger
+	v  *data.Validation
+	cc protos.CurrencyClient
 }
 
-func NewProducts(l *log.Logger, v *data.Validation) *Products {
-	return &Products{l, v}
+func NewProducts(l *log.Logger, v *data.Validation, cc protos.CurrencyClient) *Products {
+	return &Products{l, v, cc}
 }
 
 var ErrInvalidProductPath = fmt.Errorf("Invalid Path, path should be /products/[id]")
