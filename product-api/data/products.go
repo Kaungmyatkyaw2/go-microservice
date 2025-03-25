@@ -1,8 +1,13 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/hashicorp/go-hclog"
+
+	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
 )
 
 // Product defines the strcture for an API product
@@ -15,7 +20,7 @@ type Product struct {
 	ID          int     `json:"id"`
 	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description"`
-	Price       float32 `json:"price" validate:"gt=0"`
+	Price       float64 `json:"price" validate:"gt=0"`
 	SKU         string  `json:"sku" validate:"required,sku"`
 	CreatedOn   string  `json:"-"`
 	UpdatedOn   string  `json:"-"`
@@ -24,8 +29,40 @@ type Product struct {
 
 type Products []*Product
 
-func GetProducts() Products {
-	return productList
+type ProductsDB struct {
+	currency protos.CurrencyClient
+	log      hclog.Logger
+}
+
+func NewProductsDB(c protos.CurrencyClient, l hclog.Logger) *ProductsDB {
+
+	return &ProductsDB{c, l}
+}
+
+func (p *ProductsDB) GetProducts(currency string) (Products, error) {
+	if currency == "" {
+		return productList, nil
+	}
+
+	rr := &protos.RateRequest{
+		Base:        protos.Currencies_EUR,
+		Destination: protos.Currencies_GBP,
+	}
+	resp, err := p.currency.GetRate(context.Background(), rr)
+
+	if err != nil {
+		p.log.Error("Unable to get rate", "currency", currency)
+		return nil, err
+	}
+
+	pr := Products{}
+	for _, p := range productList {
+		np := *p
+		np.Price = np.Price * resp.Rate
+		pr = append(pr, &np)
+	}
+
+	return pr, nil
 }
 
 func GetProductByID(id int) (*Product, error) {
