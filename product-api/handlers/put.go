@@ -23,10 +23,10 @@ func (p *Products) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := data.UpdateProduct(prod.ID, &prod)
+	err := p.productsDB.UpdateProduct(prod.ID, &prod)
 
 	if err == data.ErrProductNotFound {
-		p.l.Println("[ERROR] product not found", err)
+		p.l.Error(" product not found", err)
 
 		w.WriteHeader(http.StatusNotFound)
 		data.ToJSON(&GenericError{Message: "Product not found in database"}, w)

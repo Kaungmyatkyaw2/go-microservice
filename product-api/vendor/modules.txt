@@ -1,4 +1,4 @@
-# github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250323073756-3218b35542d4
+# github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250325092521-7751b62d5c6b
 ## explicit; go 1.23.6
 github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2

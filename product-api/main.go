@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/Kaungmyatkyaw2/go-microservice/product-api/data"
 	"github.com/Kaungmyatkyaw2/go-microservice/product-api/handlers"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/go-openapi/runtime/middleware"
 	gohandlers "github.com/gorilla/handlers"
@@ -21,7 +21,7 @@ import (
 
 func main() {
 
-	l := log.New(os.Stdout, "product-api: ", log.LstdFlags)
+	l := hclog.Default()
 	v := data.NewValidation()
 
 	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
@@ -31,12 +31,16 @@ func main() {
 	defer conn.Close()
 
 	cc := protos.NewCurrencyClient(conn)
-
-	ph := handlers.NewProducts(l, v, cc)
+	pdb := data.NewProductsDB(cc, l)
+	ph := handlers.NewProducts(l, v, pdb)
 
 	sm := mux.NewRouter()
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
+
+	getRouter.HandleFunc("/products", ph.ListAll).Queries("currency", "{[A-Z]{3}}")
 	getRouter.HandleFunc("/products", ph.ListAll)
+
+	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.GetByID).Queries("currency", "{[A-Z]{3}}")
 	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.GetByID)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
@@ -62,18 +66,20 @@ func main() {
 		Addr:         ":9090",
 		Handler:      ch(sm),
 		IdleTimeout:  120 * time.Second,
+		ErrorLog:     l.StandardLogger(&hclog.StandardLoggerOptions{}),
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
 
 	go func() {
-		err := s.ListenAndServe()
+		l.Info("Starting server on port 9090")
 
+		err := s.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			l.Error("Error starting server", "error", err)
+			os.Exit(1)
 		}
 	}()
-
 	sigChan := make(chan os.Signal)
 
 	signal.Notify(sigChan, os.Interrupt)
@@ -81,7 +87,7 @@ func main() {
 
 	sig := <-sigChan
 
-	l.Println("Received terminate, graceful shutdown", sig)
+	l.Info("Received terminate, graceful shutdown", sig)
 
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 

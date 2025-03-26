@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 
-	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
 	"github.com/Kaungmyatkyaw2/go-microservice/product-api/data"
 )
 
@@ -13,16 +11,22 @@ import (
 // responses:
 // 	200: productsResponse
 
-func (p *Products) ListAll(w http.ResponseWriter, _ *http.Request) {
+func (p *Products) ListAll(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
-	lp := data.GetProducts()
+	cur := r.URL.Query().Get("currency")
 
-	err := data.ToJSON(lp, w)
+	lp, err := p.productsDB.GetProducts(cur)
 
 	if err != nil {
-		http.Error(w, "Unable to marshal json", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		data.ToJSON(&GenericError{Message: err.Error()}, w)
 		return
+	}
+
+	err = data.ToJSON(lp, w)
+	if err != nil {
+		p.l.Error("Unable to serializing product", "error", err)
 	}
 }
 
@@ -36,31 +40,32 @@ func (p *Products) ListAll(w http.ResponseWriter, _ *http.Request) {
 func (p *Products) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	id := getProductID(r)
+	cur := r.URL.Query().Get("currency")
 
-	prod, err := data.GetProductByID(id)
+	p.l.Debug("Currency Query", cur)
 
-	if err != nil {
+	prod, err := p.productsDB.GetProductByID(id, cur)
+
+	switch err {
+	case nil:
+
+	case data.ErrProductNotFound:
+		p.l.Error("Unable to fetch product", "error", err)
+
 		w.WriteHeader(http.StatusNotFound)
-
-		data.ToJSON(prod, w)
-
+		data.ToJSON(&GenericError{Message: err.Error()}, w)
 		return
-	}
+	default:
+		p.l.Error("Unable to fetching product", "error", err)
 
-	rr := &protos.RateRequest{
-		Base:        protos.Currencies_EUR,
-		Destination: protos.Currencies_GBP,
-	}
-	resp, err := p.cc.GetRate(context.Background(), rr)
-
-	if err != nil {
-		p.l.Println("[Error] error getting new rate", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		data.ToJSON(&GenericError{Message: err.Error()}, w)
 		return
 	}
 
-	prod.Price = prod.Price * resp.Rate
-
-	data.ToJSON(prod, w)
-
+	err = data.ToJSON(prod, w)
+	if err != nil {
+		// we should never be here but log the error just incase
+		p.l.Error("Unable to serializing product", err)
+	}
 }

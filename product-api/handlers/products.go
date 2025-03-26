@@ -2,24 +2,23 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
-	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
 	"github.com/Kaungmyatkyaw2/go-microservice/product-api/data"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/gorilla/mux"
 )
 
 type Products struct {
-	l  *log.Logger
-	v  *data.Validation
-	cc protos.CurrencyClient
+	l          hclog.Logger
+	v          *data.Validation
+	productsDB *data.ProductsDB
 }
 
-func NewProducts(l *log.Logger, v *data.Validation, cc protos.CurrencyClient) *Products {
-	return &Products{l, v, cc}
+func NewProducts(l hclog.Logger, v *data.Validation, pdb *data.ProductsDB) *Products {
+	return &Products{l, v, pdb}
 }
 
 var ErrInvalidProductPath = fmt.Errorf("Invalid Path, path should be /products/[id]")

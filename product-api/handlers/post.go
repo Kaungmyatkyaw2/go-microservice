@@ -22,6 +22,6 @@ func (p *Products) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.AddProduct(&prod)
+	p.productsDB.AddProduct(&prod)
 
 }

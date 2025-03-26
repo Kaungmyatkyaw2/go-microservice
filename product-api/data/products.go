@@ -44,12 +44,7 @@ func (p *ProductsDB) GetProducts(currency string) (Products, error) {
 		return productList, nil
 	}
 
-	rr := &protos.RateRequest{
-		Base:        protos.Currencies_EUR,
-		Destination: protos.Currencies_GBP,
-	}
-	resp, err := p.currency.GetRate(context.Background(), rr)
-
+	rate, err := p.getRate(currency)
 	if err != nil {
 		p.log.Error("Unable to get rate", "currency", currency)
 		return nil, err
@@ -58,36 +53,48 @@ func (p *ProductsDB) GetProducts(currency string) (Products, error) {
 	pr := Products{}
 	for _, p := range productList {
 		np := *p
-		np.Price = np.Price * resp.Rate
+		np.Price = np.Price * rate
 		pr = append(pr, &np)
 	}
 
 	return pr, nil
 }
 
-func GetProductByID(id int) (*Product, error) {
+func (p *ProductsDB) GetProductByID(id int, currency string) (*Product, error) {
 	i := findIndexByProductID(id)
 	if id == -1 {
 		return nil, ErrProductNotFound
 	}
 
-	return productList[i], nil
+	if currency == "" {
+		return productList[i], nil
+	}
+	rate, err := p.getRate(currency)
+	if err != nil {
+		p.log.Error("Unable to get rate", "currency", currency)
+		return nil, err
+	}
+
+	np := *productList[i]
+	np.Price = np.Price * rate
+
+	return &np, nil
 }
 
-func AddProduct(p *Product) {
-	p.ID = getNextID()
-	productList = append(productList, p)
+func (p *ProductsDB) AddProduct(prod *Product) {
+	prod.ID = getNextID()
+	productList = append(productList, prod)
 }
 
-func UpdateProduct(id int, p *Product) error {
+func (p *ProductsDB) UpdateProduct(id int, product *Product) error {
 	_, pos, err := findProduct(id)
 
 	if err != nil {
 		return err
 	}
 
-	p.ID = id
-	productList[pos] = p
+	product.ID = id
+	productList[pos] = product
 	return nil
 }
 
@@ -108,7 +115,7 @@ func getNextID() int {
 	return lp.ID + 1
 }
 
-func DeleteProduct(id int) error {
+func (p *ProductsDB) DeleteProduct(id int) error {
 	i := findIndexByProductID(id)
 	if i == -1 {
 		return ErrProductNotFound
@@ -127,6 +134,17 @@ func findIndexByProductID(id int) int {
 	}
 
 	return -1
+}
+
+func (p *ProductsDB) getRate(destination string) (float64, error) {
+	rr := &protos.RateRequest{
+		Base:        protos.Currencies(protos.Currencies_value["EUR"]),
+		Destination: protos.Currencies(protos.Currencies_value[destination]),
+	}
+	resp, err := p.currency.GetRate(context.Background(), rr)
+
+	return resp.Rate, err
+
 }
 
 var productList = []*Product{
