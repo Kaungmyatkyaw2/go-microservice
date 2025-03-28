@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"golang.org/x/exp/rand"
 )
 
 type ExchangeRates struct {
@@ -67,6 +69,42 @@ func (e *ExchangeRates) getRates() error {
 	e.rates["EUR"] = 1
 
 	return nil
+}
+func (e *ExchangeRates) MonitorRates(interval time.Duration) chan struct{} {
+	ret := make(chan struct{})
+
+	go func() {
+		ticker := time.NewTicker(interval)
+		for {
+			select {
+			case <-ticker.C:
+				// just add a random difference to the rate and return it
+				// this simulates the fluctuations in currency rates
+				for k, v := range e.rates {
+					// change can be 10% of original value
+					change := (rand.Float64() / 10)
+					// is this a postive or negative change
+					direction := rand.Intn(1)
+
+					if direction == 0 {
+						// new value with be min 90% of old
+						change = 1 - change
+					} else {
+						// new value will be 110% of old
+						change = 1 + change
+					}
+
+					// modify the rate
+					e.rates[k] = v * change
+				}
+
+				// notify updates, this will block unless there is a listener on the other end
+				ret <- struct{}{}
+			}
+		}
+	}()
+
+	return ret
 }
 
 type Cubes struct {
