@@ -1,7 +1,5 @@
-github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250326062856-fc13779283aa h1:ED/Hgf1w5dAlLkaCek74YAedF3QnvGhCHBzad1h7C1U=
-github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250326062856-fc13779283aa/go.mod h1:JcXRQdeA1YgiKYNxM35CIo/OB07YeSieXt+PE69plRY=
-github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250328033534-a8094f263923 h1:qlcjl5tAOHF1HxgwYW4L6zq31fo8igZgpW2BFPkWTM8=
-github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250328033534-a8094f263923/go.mod h1:zs94/o3KuZiSXn/xLGm1WXEm/J0Xwgc2rt4A2hLhx8w=
+github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250402034545-5cf46345025e h1:bqRmR9ucsbRhE7AqB4CQY8qK9UpDOYWexPF9udhGcEo=
+github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250402034545-5cf46345025e/go.mod h1:zs94/o3KuZiSXn/xLGm1WXEm/J0Xwgc2rt4A2hLhx8w=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

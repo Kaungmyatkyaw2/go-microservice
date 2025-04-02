@@ -3,7 +3,7 @@ module github.com/Kaungmyatkyaw2/go-microservice/product-api
 go 1.23.6
 
 require (
-	github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250328033534-a8094f263923
+	github.com/Kaungmyatkyaw2/go-microservice/currency v0.0.0-20250402034545-5cf46345025e
 	github.com/go-openapi/errors v0.22.0
 	github.com/go-openapi/runtime v0.28.0
 	github.com/go-openapi/strfmt v0.23.0

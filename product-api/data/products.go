@@ -56,12 +56,21 @@ func (p *ProductsDB) handleUpdates() {
 
 	for {
 		rr, err := sub.Recv()
-		p.log.Info("Received updated rate from server", "dest", rr.GetDestination().String())
-		if err != nil {
-			p.log.Error("Error receiving message", "error", err)
-			break
+
+		if grpcError := rr.GetError(); grpcError != nil {
+			p.log.Error("Error subscribing for rates", "error", err)
+			continue
 		}
-		p.rates[rr.Destination.String()] = rr.Rate
+
+		if resp := rr.GetRateResponse(); resp != nil {
+			p.log.Info("Received updated rate from server", "dest", resp.GetDestination().String())
+			if err != nil {
+				p.log.Error("Error receiving message", "error", err)
+				return
+			}
+			p.rates[resp.Destination.String()] = resp.Rate
+
+		}
 
 	}
 
@@ -165,6 +174,7 @@ func findIndexByProductID(id int) int {
 }
 
 func (p *ProductsDB) getRate(destination string) (float64, error) {
+	// To demo our subscription duplication err handling we have to comment off following cached mechanism
 	if r, ok := p.rates[destination]; ok {
 		return r, nil
 	}
@@ -191,9 +201,14 @@ func (p *ProductsDB) getRate(destination string) (float64, error) {
 		return -1, err
 	}
 
-	// subscribe for updated rates
-	p.client.Send(rr)
 	p.rates[destination] = resp.Rate
+
+	// subscribe for updated rates
+	err = p.client.Send(rr)
+
+	if err != nil {
+		return -1, err
+	}
 
 	return resp.Rate, err
 
