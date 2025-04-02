@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	protos "github.com/Kaungmyatkyaw2/go-microservice/currency/protos/currency"
 )
@@ -173,7 +175,21 @@ func (p *ProductsDB) getRate(destination string) (float64, error) {
 	}
 
 	// get initial rate
+
 	resp, err := p.currency.GetRate(context.Background(), rr)
+
+	if err != nil {
+		if s, ok := status.FromError(err); ok {
+			md := s.Details()[0].(*protos.RateRequest)
+			if s.Code() == codes.InvalidArgument {
+				return -1, fmt.Errorf("Unable to get rate from currency server, destination and base can't be the same, base:%s dest:%ss", md.Base.String(), md.Destination.String())
+
+			}
+			return -1, fmt.Errorf("Unable to get rate from currency server, base:%s dest:%ss", md.Base.String(), md.Destination.String())
+		}
+
+		return -1, err
+	}
 
 	// subscribe for updated rates
 	p.client.Send(rr)
